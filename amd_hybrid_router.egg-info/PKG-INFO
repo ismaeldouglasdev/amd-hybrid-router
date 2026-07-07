@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: amd-hybrid-router
+Version: 0.1.0
+Summary: AMD Hackathon Act II — Track 1: Hybrid Token-Efficient Routing Agent
+Requires-Python: >=3.12
+Requires-Dist: fastapi>=0.115
+Requires-Dist: uvicorn[standard]>=0.34
+Requires-Dist: pydantic>=2.10
+Requires-Dist: httpx>=0.28
+Requires-Dist: typer>=0.15
+Requires-Dist: rich>=13.9

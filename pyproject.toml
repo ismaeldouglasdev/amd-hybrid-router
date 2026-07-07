@@ -1,0 +1,20 @@
+[project]
+name = "amd-hybrid-router"
+version = "0.1.0"
+description = "AMD Hackathon Act II — Track 1: Hybrid Token-Efficient Routing Agent"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "pydantic>=2.10",
+    "httpx>=0.28",
+    "typer>=0.15",
+    "rich>=13.9",
+]
+
+[project.scripts]
+router = "app.cli:cli"
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
