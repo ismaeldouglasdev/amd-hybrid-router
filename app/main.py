@@ -6,8 +6,10 @@ import logging
 from contextlib import asynccontextmanager
 
 import httpx
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 
 from app.metrics import STORE
 from app.router import route
@@ -24,6 +26,11 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="AMD Hybrid Token-Efficient Router", version="0.1.0", lifespan=lifespan)
+
+
+@app.get("/", response_class=HTMLResponse)
+async def dashboard() -> HTMLResponse:
+    return HTMLResponse(Path(__file__).parent.joinpath("dashboard", "index.html").read_text())
 
 
 @app.post("/v1/route", response_model=RouteResponse)
@@ -44,12 +51,17 @@ async def api_metrics_prom() -> str:
     return STORE.prometheus_text()
 
 
+@app.get("/v1/recent")
+async def api_recent(limit: int = 10) -> list[dict]:
+    return STORE.recent(limit=limit)
+
+
 @app.get("/v1/health")
 async def health() -> dict:
     """Quick health check — pings Ollama and 9Router."""
     statuses = {}
     async with httpx.AsyncClient(timeout=5) as c:
-        for name, url in [("ollama", "http://localhost:11434"), ("ninerouter", "http://localhost:8080/v1")]:
+        for name, url in [("ollama", "http://localhost:11434"), ("ninerouter", "http://localhost:20128/")]:
             try:
                 r = await c.get(url)
                 statuses[name] = {"status": "up" if r.is_success else "degraded", "code": r.status_code}

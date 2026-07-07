@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import json
+import json as _json
 import os
 import time
 
@@ -12,13 +12,29 @@ from app.providers.base import BaseProvider
 from app.schemas import Provider, ProviderResult
 
 NINEROUTER_URL = os.environ.get("NINEROUTER_URL", "http://localhost:8080/v1")
+NINEROUTER_KEY = os.environ.get("NINEROUTER_KEY", "")
+
+if not NINEROUTER_KEY:
+    try:
+        with open(os.path.expanduser("~/.config/opencode/opencode.json")) as f:
+            cfg = _json.load(f)
+            NINEROUTER_KEY = cfg.get("provider", {}).get("9router", {}).get("options", {}).get("apiKey", "")
+    except (FileNotFoundError, _json.JSONDecodeError, KeyError):
+        pass
+
+
+def _parse_sse_response(text: str) -> dict:
+    """9Router returns SSE even for non-stream requests.
+    Extract JSON before `data: [DONE]` trailer."""
+    done = text.find("data: [DONE]")
+    if done != -1:
+        text = text[:done]
+    return _json.loads(text.strip())
 
 
 class NinerouterProvider(BaseProvider):
-    """Routes through 9Router's round-robin combo for $0 inference."""
-
     provider = Provider.ninerouter
-    default_model = "combo-a"  # 28-model round-robin — free
+    default_model = "combo-round-robin"
     cost_per_1k_input = 0.0
     cost_per_1k_output = 0.0
 
@@ -32,25 +48,31 @@ class NinerouterProvider(BaseProvider):
         max_tokens: int = 4096,
         temperature: float = 0.7,
     ) -> ProviderResult:
-        url = f"{self.base_url}/chat/completions"
+        url = f"{self.base_url}/v1/chat/completions"
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
+
+        headers = {"Content-Type": "application/json"}
+        if NINEROUTER_KEY:
+            headers["Authorization"] = f"Bearer {NINEROUTER_KEY}"
 
         body = {
             "model": self.default_model,
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
+            "stream": False,
         }
 
         start = time.monotonic()
         try:
             async with httpx.AsyncClient(timeout=180) as c:
-                resp = await c.post(url, json=body)
+                resp = await c.post(url, json=body, headers=headers)
                 resp.raise_for_status()
-                data = resp.json()
+                text = resp.text
+                data = _parse_sse_response(text)
         except httpx.RequestError as e:
             elapsed = (time.monotonic() - start) * 1000
             return ProviderResult(
@@ -65,10 +87,24 @@ class NinerouterProvider(BaseProvider):
                 success=False,
                 error=str(e),
             )
+        except (_json.JSONDecodeError, KeyError, IndexError) as e:
+            elapsed_ms = (time.monotonic() - start) * 1000
+            return ProviderResult(
+                provider=self.provider,
+                model=self.default_model,
+                output="",
+                tokens_input=0,
+                tokens_output=0,
+                latency_ms=round(elapsed_ms, 1),
+                tpot_ms=0,
+                cost_usd=0,
+                success=False,
+                error=f"parse error: {e}",
+            )
 
         elapsed_ms = (time.monotonic() - start) * 1000
         choice = data["choices"][0]
-        output = choice["message"]["content"]
+        output = choice["message"].get("content", "")
         usage = data.get("usage", {})
         tok_in = usage.get("prompt_tokens", 0)
         tok_out = usage.get("completion_tokens", 0)

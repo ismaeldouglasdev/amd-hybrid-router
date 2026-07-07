@@ -69,6 +69,22 @@ class MetricsStore:
             "provider_breakdown": breakdown,
         }
 
+    def recent(self, limit: int = 20) -> list[dict]:
+        """Last N records, newest first."""
+        return [
+            {
+                "provider": r.provider.value,
+                "model": r.model,
+                "tokens_input": r.tokens_input,
+                "tokens_output": r.tokens_output,
+                "latency_ms": r.latency_ms,
+                "cost_usd": r.cost_usd,
+                "success": r.success,
+                "timestamp": r.timestamp,
+            }
+            for r in self.records[-limit:]
+        ][::-1]
+
     def prometheus_text(self) -> str:
         snap = self.snapshot()
         lines = [

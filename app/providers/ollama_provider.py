@@ -14,7 +14,7 @@ class OllamaProvider(BaseProvider):
     """Runs Qwen 2.5 Coder / Gemma 4 locally via Ollama."""
 
     provider = Provider.ollama
-    default_model = "qwen2.5-coder:7b"
+    default_model = "qwen2.5-coder:1.5b"
     cost_per_1k_input = 0.0
     cost_per_1k_output = 0.0
 
