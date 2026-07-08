@@ -12,9 +12,12 @@ from app.schemas import Complexity, Provider, RouteRequest, RouteResponse
 log = logging.getLogger(__name__)
 
 _COMPLEX_TRIGGERS = [
-    "code", "debug", "refactor", "explain", "analyze", "compare",
-    "write a", "create a", "generate a", "implement", "design a",
-    "architecture", "algorithm", "optimize", "migrate",
+    "architecture", "design a", "implement a", "algorithm", "optimize", "migrate",
+    "refactor", "debug this", "compare", "analyze",
+]
+_MEDIUM_TRIGGERS = [
+    "write a", "create a", "generate a", "explain", "code", "function",
+    "script", "method",
 ]
 _LONG_THRESHOLD = 500
 
@@ -23,6 +26,8 @@ def _estimate_complexity(prompt: str) -> Complexity:
     prompt_lower = prompt.lower()
     if any(trigger in prompt_lower for trigger in _COMPLEX_TRIGGERS):
         return Complexity.complex
+    if any(trigger in prompt_lower for trigger in _MEDIUM_TRIGGERS):
+        return Complexity.medium
     if len(prompt) > _LONG_THRESHOLD or len(prompt.split()) > 80:
         return Complexity.medium
     return Complexity.simple
@@ -41,12 +46,12 @@ def _find_model(match: str) -> str:
 
 # Model routing map: complexity → Fireworks model + cost reason
 _MODEL_BY_COMPLEXITY = {
-    Complexity.simple:    ("llama-v3p1-8b",     "$0.10/M tok input — cheapest, good for simple Q&A"),
-    Complexity.medium:    ("qwen2p5-coder-7b",   "$0.20/M tok input — balanced speed/quality"),
-    Complexity.complex:   ("qwen2p5-coder-32b",  "$0.80/M tok input — best quality for code/architecture"),
+    Complexity.simple:    ("glm-5p1",           "$0.30/M tok — cheapest, good for simple Q&A"),
+    Complexity.medium:    ("gpt-oss-120b",       "$0.50/M tok — balanced for code/explain"),
+    Complexity.complex:   ("deepseek-v4-pro",   "$1.20/M tok — best reasoning for hard tasks"),
 }
 
-FALLBACK_MODEL = "llama-v3p1-8b"
+FALLBACK_MODEL = "glm-5p1"
 
 
 def _select_fireworks_model(complexity: Complexity) -> tuple[str, str]:
@@ -68,34 +73,24 @@ async def route(req: RouteRequest) -> RouteResponse:
     estimated_tokens = _estimate_tokens(req.prompt)
 
     primary_model, reason = _select_fireworks_model(complexity)
-    fallback_models = [
-        m for m in ALLOWED_MODELS
-        if m != primary_model and "8b" in m or "7b" in m
-    ]
-    if not fallback_models or primary_model == FALLBACK_MODEL:
-        fallback_models = [m for m in ALLOWED_MODELS if m != primary_model]
 
     provider = _PROVIDER_INSTANCES[Provider.fireworks]
-    last_error: str | None = None
-    result = None
-
-    chain = [primary_model] + fallback_models[:2]  # try primary + 2 fallbacks
-    for idx, model in enumerate(chain):
-        log.info(
-            "fireworks: %s (attempt %d/%d) — %s",
-            model.split("/")[-1], idx + 1, len(chain), reason if idx == 0 else "fallback",
-        )
+    result = await provider.generate(
+        prompt=req.prompt,
+        system_prompt=req.system_prompt,
+        max_tokens=req.max_tokens,
+        temperature=req.temperature,
+        model_override=primary_model,
+    )
+    if not result.success:
+        log.warning("fireworks %s failed: %s — retrying with glm-5p1", primary_model.split("/")[-1], result.error)
         result = await provider.generate(
             prompt=req.prompt,
             system_prompt=req.system_prompt,
             max_tokens=req.max_tokens,
             temperature=req.temperature,
-            model_override=model,
+            model_override=ALLOWED_MODELS[0],
         )
-        if result.success:
-            break
-        last_error = result.error
-        log.warning("fireworks %s failed: %s", model, last_error)
 
     if result is None:
         raise RuntimeError("no fireworks model available")

@@ -12,24 +12,26 @@ from app.schemas import Provider, ProviderResult
 
 FIREWORKS_BASE_URL = os.environ.get(
     "FIREWORKS_BASE_URL",
-    "https://api.fireworks.ai/inference/v1",
+    "https://api.fireworks.ai/inference",
 )
 FIREWORKS_API_KEY = os.environ.get("FIREWORKS_API_KEY", "")
 
 ALLOWED_MODELS = [
-    "accounts/fireworks/models/llama-v3p1-8b-instruct",
-    "accounts/fireworks/models/qwen2p5-coder-7b-instruct",
-    "accounts/fireworks/models/qwen2p5-coder-32b-instruct",
-    "accounts/fireworks/models/deepseek-v3p1",
-    "accounts/fireworks/models/gemma-3-27b-it",
+    "accounts/fireworks/models/gpt-oss-120b",
+    "accounts/fireworks/models/glm-5p1",
+    "accounts/fireworks/models/glm-5p2",
+    "accounts/fireworks/models/deepseek-v4-pro",
+    "accounts/fireworks/models/kimi-k2p6",
+    "accounts/fireworks/models/kimi-k2p5",
 ]
 
 MODEL_COSTS: dict[str, tuple[float, float]] = {
-    "llama-v3p1-8b-instruct": (0.10, 0.15),
-    "qwen2p5-coder-7b-instruct": (0.20, 0.30),
-    "qwen2p5-coder-32b-instruct": (0.80, 0.90),
-    "deepseek-v3p1": (1.20, 1.80),
-    "gemma-3-27b-it": (0.30, 0.45),
+    "gpt-oss-120b": (0.50, 0.80),       # mid-range, generic
+    "glm-5p1": (0.30, 0.50),             # cheapest GLM
+    "glm-5p2": (0.40, 0.60),             # slightly better GLM
+    "deepseek-v4-pro": (1.20, 1.80),     # premium reasoning
+    "kimi-k2p6": (0.60, 0.90),           # mid-high
+    "kimi-k2p5": (0.80, 1.20),           # high quality
 }
 
 
@@ -42,7 +44,7 @@ def _match_cost(model_id: str) -> tuple[float, float]:
 
 class FireworksProvider(BaseProvider):
     provider = Provider.fireworks
-    default_model = "accounts/fireworks/models/llama-v3p1-8b-instruct"
+    default_model = "accounts/fireworks/models/glm-5p1"
 
     def __init__(self, base_url: str | None = None, api_key: str | None = None) -> None:
         self.base_url = (base_url or FIREWORKS_BASE_URL).rstrip("/")
