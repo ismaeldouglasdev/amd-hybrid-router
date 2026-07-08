@@ -34,6 +34,11 @@ async def dashboard() -> HTMLResponse:
     return HTMLResponse(Path(__file__).parent.joinpath("dashboard", "index.html").read_text())
 
 
+@app.get("/playground", response_class=HTMLResponse)
+async def playground() -> HTMLResponse:
+    return HTMLResponse(Path(__file__).parent.joinpath("dashboard", "playground.html").read_text())
+
+
 @app.post("/v1/route", response_model=RouteResponse)
 async def api_route(req: RouteRequest) -> RouteResponse:
     try:

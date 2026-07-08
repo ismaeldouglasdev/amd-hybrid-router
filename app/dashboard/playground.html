@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground — AMD Hybrid Router</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#c9d1d9;padding:24px;max-width:960px;margin:0 auto}
+h1{font-size:1.5rem;color:#f0f6fc;margin-bottom:4px}
+.sub{color:#8b949e;font-size:.85rem;margin-bottom:24px}
+.panel{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px;margin-bottom:16px}
+label{display:block;font-size:.8rem;color:#8b949e;margin-bottom:6px;margin-top:12px}
+label:first-child{margin-top:0}
+textarea,input[type=text]{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:10px 12px;font-size:.9rem;font-family:inherit}
+textarea:focus,input:focus{outline:none;border-color:#58a6ff}
+textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row > div{flex:1;min-width:140px}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-row input{flex:1}
+.slider-row .val{min-width:40px;text-align:right;color:#58a6ff;font-weight:600}
+button{background:#238636;color:#fff;border:none;border-radius:6px;padding:10px 24px;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:16px}
+button:hover{background:#2ea043}
+button:disabled{opacity:.5;cursor:not-allowed}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #fff3;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+#result{display:none}
+#result .model-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600;margin-bottom:12px}
+.model-badge.simple{background:#1a7f3733;color:#3fb950;border:1px solid #3fb95044}
+.model-badge.medium{background:#9e6a0333;color:#d29922;border:1px solid #d2992244}
+.model-badge.complex{background:#da363333;color:#f85149;border:1px solid #f8514944}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}
+.stat-card{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:10px}
+.stat-card .s-label{font-size:.7rem;text-transform:uppercase;color:#8b949e}
+.stat-card .s-val{font-size:1rem;font-weight:600;color:#f0f6fc;margin-top:2px}
+.stat-card .s-val.green{color:#3fb950}
+.output-box{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin-top:12px;font-size:.85rem;line-height:1.5;white-space:pre-wrap;max-height:300px;overflow-y:auto}
+.output-box .label{color:#8b949e;font-size:.75rem;text-transform:uppercase;margin-bottom:6px}
+.cost-compare{margin-top:12px;font-size:.82rem}
+.cost-compare table{width:100%;border-collapse:collapse;margin-top:6px}
+.cost-compare th{text-align:left;color:#8b949e;padding:6px 4px;border-bottom:1px solid #30363d;font-size:.75rem}
+.cost-compare td{padding:5px 4px;border-bottom:1px solid #21262d}
+.cost-compare tr.chosen{background:#1a7f3711}
+.cost-compare tr.chosen td{color:#3fb950}
+.error-msg{color:#f85149;background:#da363311;border:1px solid #f8514933;border-radius:6px;padding:10px;margin-top:12px}
+kbd{background:#21262d;padding:1px 5px;border-radius:3px;font-size:.75rem;border:1px solid #30363d}
+</style>
+</head>
+<body>
+
+<h1>🧪 Playground</h1>
+<div class="sub">AMD Hybrid Token-Efficient Router — Track 1</div>
+
+<div class="panel">
+  <label>Prompt</label>
+  <textarea id="prompt" placeholder="Type a prompt to route... e.g. write a python function to reverse a string">write a python function to reverse a string</textarea>
+
+  <div class="row">
+    <div>
+      <label>System prompt <kbd>opt</kbd></label>
+      <input type="text" id="system" placeholder="You are a helpful assistant" value="You are a concise coding assistant.">
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Max tokens</label>
+      <div class="slider-row">
+        <input type="range" id="maxTokens" min="16" max="4096" value="512">
+        <span class="val" id="maxTokensVal">512</span>
+      </div>
+    </div>
+    <div>
+      <label>Temperature</label>
+      <div class="slider-row">
+        <input type="range" id="temp" min="0" max="200" value="70">
+        <span class="val" id="tempVal">0.7</span>
+      </div>
+    </div>
+  </div>
+
+  <button id="submitBtn" onclick="route()">🚀 Route</button>
+</div>
+
+<div id="result" class="panel">
+  <div id="modelBadge" class="model-badge simple">—</div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="s-label">Model</div><div class="s-val" id="resModel">—</div></div>
+    <div class="stat-card"><div class="s-label">Cost</div><div class="s-val green" id="resCost">$0</div></div>
+    <div class="stat-card"><div class="s-label">Latency</div><div class="s-val" id="resLatency">—</div></div>
+    <div class="stat-card"><div class="s-label">Tokens</div><div class="s-val" id="resTokens">—</div></div>
+  </div>
+
+  <div class="output-box"><div class="label">Output</div><div id="resOutput">—</div></div>
+
+  <div class="cost-compare" id="costCompare" style="display:none">
+    <div style="font-weight:600;margin-bottom:4px">What if it used a different model?</div>
+    <table><thead><tr><th>Model</th><th style="text-align:right">Cost</th><th style="text-align:right">Savings vs deepseek</th></tr></thead><tbody id="costTableBody"></tbody></table>
+  </div>
+
+  <div id="errorBox" class="error-msg" style="display:none"></div>
+</div>
+
+<div class="panel" style="border-color:#21262d;background:#0d1117">
+  <div style="color:#8b949e;font-size:.85rem">
+    <b>Routing logic:</b> <kbd>simple</kbd> → glm-5p1 ($0.30/M) &nbsp; <kbd>medium</kbd> → gpt-oss-120b ($0.50/M) &nbsp; <kbd>complex</kbd> → deepseek-v4-pro ($1.20/M)
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+let modelCosts = {};
+
+async function loadModels() {
+  try {
+    const r = await fetch(API + '/v1/models');
+    const data = await r.json();
+    data.forEach(m => { modelCosts[m.full_id] = { costIn: m.cost_input_per_1k, costOut: m.cost_output_per_1k }; });
+  } catch(e) {}
+}
+
+document.getElementById('maxTokens').addEventListener('input', e => {
+  document.getElementById('maxTokensVal').textContent = e.target.value;
+});
+document.getElementById('temp').addEventListener('input', e => {
+  document.getElementById('tempVal').textContent = (e.target.value / 100).toFixed(1);
+});
+
+async function route() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Routing...';
+
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'none';
+
+  const prompt = document.getElementById('prompt').value.trim();
+  if (!prompt) { alert('Enter a prompt'); btn.disabled = false; btn.innerHTML = '🚀 Route'; return; }
+
+  try {
+    const resp = await fetch(API + '/v1/route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        system_prompt: document.getElementById('system').value || null,
+        max_tokens: parseInt(document.getElementById('maxTokens').value),
+        temperature: parseInt(document.getElementById('temp').value) / 100,
+      }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) {
+      showError(data.error || `HTTP ${resp.status}`);
+      return;
+    }
+
+    const r = data.result;
+    const complexity = data.complexity || 'simple';
+
+    // Badge
+    const badge = document.getElementById('modelBadge');
+    badge.className = 'model-badge ' + complexity;
+    badge.textContent = complexity.toUpperCase();
+
+    document.getElementById('resModel').textContent = r.model.split('/').pop();
+    document.getElementById('resCost').textContent = '$' + r.cost_usd;
+    document.getElementById('resLatency').textContent = r.latency_ms + 'ms';
+    document.getElementById('resTokens').textContent = r.tokens_input + ' + ' + r.tokens_output;
+    document.getElementById('resOutput').textContent = r.output || '(empty response)';
+
+    // Cost comparison table
+    buildCostCompare(r.model, r.tokens_input, r.tokens_output);
+
+    document.getElementById('result').style.display = 'block';
+
+  } catch(e) {
+    showError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Route';
+  }
+}
+
+function buildCostCompare(chosenModel, tokIn, tokOut) {
+  const keys = Object.keys(modelCosts);
+  if (!keys.length) { document.getElementById('costCompare').style.display = 'none'; return; }
+
+  const deepseekCost = modelCosts['accounts/fireworks/models/deepseek-v4-pro'];
+  const deepseekTotal = deepseekCost ? ((tokIn/1000)*deepseekCost.costIn + (tokOut/1000)*deepseekCost.costOut) : 0;
+
+  const tbody = document.getElementById('costTableBody');
+  tbody.innerHTML = '';
+  let hasData = false;
+
+  keys.forEach(mid => {
+    const c = modelCosts[mid];
+    if (!c) return;
+    const total = (tokIn/1000)*c.costIn + (tokOut/1000)*c.costOut;
+    const savings = deepseekTotal - total;
+    const isChosen = mid === chosenModel;
+    if (isChosen) hasData = true;
+    const tr = document.createElement('tr');
+    if (isChosen) tr.className = 'chosen';
+    tr.innerHTML = `
+      <td>${mid.split('/').pop()} ${isChosen ? '← chosen' : ''}</td>
+      <td style="text-align:right">$${total.toFixed(6)}</td>
+      <td style="text-align:right;color:${savings > 0 ? '#3fb950' : '#8b949e'}">${savings > 0 ? '−$' + savings.toFixed(6) : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('costCompare').style.display = hasData ? 'block' : 'none';
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = 'Error: ' + msg;
+  box.style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+}
+
+// Handle Ctrl+Enter
+document.getElementById('prompt').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) route();
+});
+
+loadModels();
+</script>
+</body>
+</html>
