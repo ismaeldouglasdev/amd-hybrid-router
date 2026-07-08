@@ -15,6 +15,7 @@ from app.metrics import STORE
 from app.providers.fireworks_provider import ALLOWED_MODELS, FireworksProvider, MODEL_COSTS
 from app.router import route
 from app.schemas import BenchResult, MetricsSnapshot, Provider, RouteRequest, RouteResponse
+from app.security import setup_security
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 log = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="AMD Hybrid Token-Efficient Router", version="0.1.0", lifespan=lifespan)
+setup_security(app)
 
 
 @app.get("/", response_class=HTMLResponse)

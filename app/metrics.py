@@ -22,7 +22,9 @@ class RequestRecord:
 
 
 class MetricsStore:
-    """Thread-safe-ish metrics store (single-process, no locks needed for uvicorn single-worker)."""
+    """In-process metrics. Caps at MAX_RECORDS to prevent OOM."""
+
+    MAX_RECORDS = 10_000
 
     def __init__(self) -> None:
         self.records: list[RequestRecord] = []
@@ -31,6 +33,12 @@ class MetricsStore:
     def record(self, r: RequestRecord) -> None:
         self.records.append(r)
         self._by_provider[r.provider.value].append(r)
+        if len(self.records) > self.MAX_RECORDS:
+            trimmed = self.records[-self.MAX_RECORDS:]
+            self._by_provider.clear()
+            for rec in trimmed:
+                self._by_provider[rec.provider.value].append(rec)
+            self.records = trimmed
 
     def snapshot(self) -> dict:
         total = len(self.records)
