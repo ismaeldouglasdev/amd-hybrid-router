@@ -3,144 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AMD Hybrid Router Dashboard</title>
+<title>AMD Hybrid Router — Dashboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#c9d1d9;padding:24px;min-height:100vh}
-h1{font-size:1.5rem;margin-bottom:4px;color:#f0f6fc}
-.sub{color:#8b949e;font-size:.85rem;margin-bottom:24px}
-.status-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;font-size:.78rem;color:#8b949e}
-.status-bar .indicator{display:flex;align-items:center;gap:6px}
-.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.status-dot.online{background:#3fb950;box-shadow:0 0 6px #3fb95066}
-.status-dot.offline{background:#f85149;box-shadow:0 0 6px #f8514966}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
-.card h3{font-size:.7rem;text-transform:uppercase;color:#8b949e;margin-bottom:6px;letter-spacing:.04em}
-.card .val{font-size:1.6rem;font-weight:600;color:#f0f6fc;font-variant-numeric:tabular-nums}
-.card .val.green{color:#3fb950}
-.card .val.yellow{color:#d29922}
-.card .val.red{color:#f85149}
-.providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:24px}
-.prov-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
-.prov-card h3{font-size:.85rem;margin-bottom:10px}
-.prov-card .row{display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem}
-.prov-card .row .label{color:#8b949e}
-.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.pulse.up{background:#3fb950;box-shadow:0 0 6px #3fb95066}
-.pulse.down{background:#f85149;box-shadow:0 0 6px #f8514966}
-#recent{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;max-height:320px;overflow-y:auto}
-#recent table{width:100%;border-collapse:collapse;font-size:.78rem}
-#recent th{text-align:left;color:#8b949e;padding:6px 4px;border-bottom:1px solid #30363d;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;background:#161b22}
-#recent td{padding:5px 4px;border-bottom:1px solid #21262d;font-variant-numeric:tabular-nums}
-#recent tr:last-child td{border-bottom:none}
-.error{color:#f85149}
-.nav-links{display:flex;gap:16px;margin-bottom:16px}
-.nav-links a{color:#58a6ff;text-decoration:none;font-size:.85rem}
-.nav-links a:hover{text-decoration:underline}
-@media(max-width:600px){body{padding:12px}.grid{grid-template-columns:1fr 1fr}}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#c9d1d9;padding:24px;max-width:1100px;margin:0 auto;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px}
+header h1{font-size:1.4rem;color:#f0f6fc;font-weight:700}
+header .sub{color:#8b949e;font-size:.82rem;margin-top:2px}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav a{color:#8b949e;text-decoration:none;font-size:.82rem;padding:4px 12px;border-radius:6px;border:1px solid #30363d;transition:all .15s}
+.nav a:hover{color:#f0f6fc;border-color:#58a6ff;background:#161b22}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px}
+.card .label{font-size:.68rem;text-transform:uppercase;color:#8b949e;letter-spacing:.05em;margin-bottom:4px}
+.card .value{font-size:1.5rem;font-weight:700;color:#f0f6fc;font-variant-numeric:tabular-nums}
+.card .value.ok{color:#3fb950}
+.card .value.warn{color:#d29922}
+.card .value.bad{color:#f85149}
+.status-line{display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:#8b949e;margin-bottom:20px;padding:8px 0;border-bottom:1px solid #21262d}
+.status-line .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.status-line .dot.on{background:#3fb950;box-shadow:0 0 8px #3fb95066}
+.status-line .dot.off{background:#f85149;box-shadow:0 0 8px #f8514966}
+.status-line .left{display:flex;align-items:center;gap:4px}
+h2{font-size:1rem;color:#f0f6fc;margin-bottom:12px}
+.providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:24px}
+.pcard{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px}
+.pcard h3{font-size:.82rem;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pcard .row{display:flex;justify-content:space-between;padding:3px 0;font-size:.8rem}
+.pcard .row .l{color:#8b949e}
+.recent-wrap{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px}
+.recent-wrap h2{margin-bottom:10px}
+.recent-wrap table{width:100%;border-collapse:collapse;font-size:.76rem}
+.recent-wrap th{text-align:left;color:#8b949e;padding:6px 4px;border-bottom:1px solid #30363d;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;background:#161b22}
+.recent-wrap td{padding:5px 4px;border-bottom:1px solid #21262d;font-variant-numeric:tabular-nums}
+.empty{color:#8b949e;text-align:center;padding:32px;font-size:.85rem}
+@media(max-width:600px){body{padding:12px}.stats{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<h1>⚡ AMD Hybrid Router</h1>
-<div class="sub">Track 1 — Token-Efficient Routing Agent</div>
 
-<div class="nav-links">
-  <a href="/">Dashboard</a>
-  <a href="/playground">Playground</a>
-  <a href="/v1/metrics/prometheus" target="_blank">Prometheus</a>
-  <a href="https://github.com/ismaeldouglasdev/amd-hybrid-router" target="_blank">GitHub</a>
+<header>
+  <div>
+    <h1>⚡ AMD Hybrid Router</h1>
+    <div class="sub">Track 1 — Token-Efficient Routing Agent</div>
+  </div>
+  <div class="nav">
+    <a href="/">Dashboard</a>
+    <a href="/playground">Playground</a>
+    <a href="https://github.com/ismaeldouglasdev/amd-hybrid-router" target="_blank">GitHub</a>
+  </div>
+</header>
+
+<div class="status-line" id="statusBar">
+  <span class="left"><span class="dot on" id="statusDot"></span><span id="statusText">Checking...</span></span>
+  <span id="lastUpdate">—</span>
 </div>
 
-<div class="status-bar" role="status" aria-live="polite">
-  <span class="indicator"><span class="status-dot online" id="statusDot"></span><span id="statusText">Connected</span></span>
-  <span id="lastUpdated">—</span>
+<div class="stats" id="stats">
+  <div class="card"><div class="label">Requests</div><div class="value" id="total">0</div></div>
+  <div class="card"><div class="label">Success Rate</div><div class="value ok" id="success">—</div></div>
+  <div class="card"><div class="label">Avg Latency</div><div class="value" id="latency">—</div></div>
+  <div class="card"><div class="label">Total Tokens</div><div class="value" id="tokens">0</div></div>
 </div>
 
-<div class="grid" id="stats" role="group" aria-label="Metrics overview">
-  <div class="card"><h3 id="totalLabel">Requests</h3><div class="val" id="total" aria-labelledby="totalLabel">0</div></div>
-  <div class="card"><h3 id="successLabel">Success Rate</h3><div class="val green" id="success" aria-labelledby="successLabel">100%</div></div>
-  <div class="card"><h3 id="latencyLabel">Avg Latency</h3><div class="val" id="latency" aria-labelledby="latencyLabel">0ms</div></div>
-  <div class="card"><h3 id="tokensLabel">Total Tokens</h3><div class="val" id="tokens" aria-labelledby="tokensLabel">0</div></div>
-</div>
+<h2>Providers</h2>
+<div class="providers" id="providers"></div>
 
-<div class="providers" id="providers" role="group" aria-label="Provider breakdown"></div>
-
-<div id="recent" role="region" aria-label="Recent requests">
-  <div style="color:#8b949e;text-align:center;padding:24px">Waiting for requests...</div>
+<div class="recent-wrap">
+  <h2>Recent Requests</h2>
+  <div id="recent"><div class="empty">No requests yet.</div></div>
 </div>
 
 <script>
 const API = window.location.origin;
-let online = true;
 
-function updateStatus(ok) {
-  const dot = document.getElementById('statusDot');
-  const text = document.getElementById('statusText');
-  if (ok && online) {
-    document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
-  }
-  if (ok !== undefined) {
-    online = ok;
-    dot.className = 'status-dot ' + (ok ? 'online' : 'offline');
-    text.textContent = ok ? 'Connected' : 'Disconnected';
-  }
-}
+function n(v, d) { return v !== undefined && v !== null && !isNaN(v) ? v : d; }
 
 async function fetchMetrics() {
+  const dot = document.getElementById('statusDot');
+  const st = document.getElementById('statusText');
   try {
     const r = await fetch(API + '/v1/metrics');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    updateStatus(true);
-    document.getElementById('total').textContent = d.total_requests;
-    const sr = (d.success_rate * 100).toFixed(1);
-    const srEl = document.getElementById('success');
-    srEl.textContent = sr + '%';
-    srEl.className = 'val ' + (d.success_rate >= 0.95 ? 'green' : d.success_rate >= 0.8 ? 'yellow' : 'red');
-    document.getElementById('latency').textContent = d.avg_latency_ms + 'ms';
-    document.getElementById('tokens').textContent = d.total_tokens.toLocaleString();
+    dot.className = 'dot on'; st.textContent = 'Connected';
+    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 
-    const provDiv = document.getElementById('providers');
-    const keys = Object.keys(d.provider_breakdown);
-    provDiv.innerHTML = keys.length ? keys.map(k => {
+    document.getElementById('total').textContent = n(d.total_requests, 0);
+    const sr = n(d.success_rate, 1) * 100;
+    const srEl = document.getElementById('success');
+    srEl.textContent = sr.toFixed(1) + '%';
+    srEl.className = 'value ' + (sr >= 95 ? 'ok' : sr >= 80 ? 'warn' : 'bad');
+    document.getElementById('latency').textContent = n(d.avg_latency_ms, 0).toFixed(0) + 'ms';
+    document.getElementById('tokens').textContent = n(d.total_tokens, 0).toLocaleString();
+
+    const pd = document.getElementById('providers');
+    const keys = Object.keys(d.provider_breakdown || {});
+    pd.innerHTML = keys.length ? keys.map(k => {
       const p = d.provider_breakdown[k];
-      const sr2 = (p.success_rate * 100).toFixed(1);
-      return `<div class="prov-card">
-        <h3><span class="pulse ${p.success_rate > 0 ? 'up' : 'down'}"></span>${k}</h3>
-        <div class="row"><span class="label">Requests</span><span>${p.requests}</span></div>
-        <div class="row"><span class="label">Success</span><span>${sr2}%</span></div>
-        <div class="row"><span class="label">Avg Latency</span><span>${p.avg_latency_ms.toFixed(0)}ms</span></div>
-        <div class="row"><span class="label">Avg Cost</span><span>$${p.avg_cost_usd.toFixed(6)}</span></div>
-        <div class="row"><span class="label">Total Tokens</span><span>${p.total_tokens.toLocaleString()}</span></div>
+      const sr2 = n(p.success_rate, 1) * 100;
+      return `<div class="pcard">
+        <h3><span class="dot ${p.success_rate > 0 ? 'on' : 'off'}"></span>${k}</h3>
+        <div class="row"><span class="l">Requests</span><span>${n(p.requests, 0)}</span></div>
+        <div class="row"><span class="l">Success</span><span>${sr2.toFixed(1)}%</span></div>
+        <div class="row"><span class="l">Avg Latency</span><span>${n(p.avg_latency_ms, 0).toFixed(0)}ms</span></div>
+        <div class="row"><span class="l">Total Tokens</span><span>${n(p.total_tokens, 0).toLocaleString()}</span></div>
       </div>`;
-    }).join('') : '';
-  } catch(e) { updateStatus(false); console.error(e); }
+    }).join('') : '<div class="empty">No data yet.</div>';
+  } catch(e) {
+    dot.className = 'dot off'; st.textContent = 'Disconnected';
+    document.getElementById('lastUpdate').textContent = '—';
+  }
 }
 
 async function fetchRecent() {
   try {
     const r = await fetch(API + '/v1/recent?limit=15');
+    if (!r.ok) return;
     const data = await r.json();
     const div = document.getElementById('recent');
-    if (!data.length) {
-      div.innerHTML = '<div style="color:#8b949e;text-align:center;padding:24px">No requests yet.</div>';
-      return;
-    }
+    if (!data || !data.length) { div.innerHTML = '<div class="empty">No requests yet.</div>'; return; }
     let html = '<table><thead><tr><th>Time</th><th>Provider</th><th>Status</th><th>Tokens</th><th>Latency</th></tr></thead><tbody>';
     data.forEach(d => {
       const t = new Date(d.timestamp * 1000).toLocaleTimeString();
-      const status = d.success ? '✓' : '✗';
-      html += `<tr><td>${t}</td><td>${d.provider}</td><td class="${d.success ? '' : 'error'}">${status}</td><td>${d.tokens_input}+${d.tokens_output}</td><td>${d.latency_ms.toFixed(0)}ms</td></tr>`;
+      html += `<tr><td>${t}</td><td>${d.provider || '—'}</td><td style="color:${d.success ? '#3fb950' : '#f85149'}">${d.success ? '✓' : '✗'}</td><td>${n(d.tokens_input,0)}+${n(d.tokens_output,0)}</td><td>${n(d.latency_ms,0).toFixed(0)}ms</td></tr>`;
     });
     html += '</tbody></table>';
     div.innerHTML = html;
-  } catch(e) { console.error(e); }
+  } catch(e) {}
 }
 
+fetchMetrics(); fetchRecent();
 setInterval(fetchMetrics, 3000);
 setInterval(fetchRecent, 5000);
-fetchMetrics();
-fetchRecent();
 </script>
 </body>
 </html>

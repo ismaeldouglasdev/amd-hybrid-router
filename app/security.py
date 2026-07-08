@@ -56,7 +56,7 @@ async def rate_limit_middleware(request: Request, call_next: Callable[[Request],
 
 # ── Optional API key auth ──
 
-AUTH_EXEMPT_PATHS = {"/", "/playground", "/v1/health"}
+AUTH_EXEMPT_PATHS = {"/", "/playground", "/v1/health", "/v1/metrics", "/v1/metrics/prometheus", "/v1/recent", "/v1/models"}
 
 
 async def auth_middleware(request: Request, call_next: Callable[[Request], Awaitable[Any]]) -> Any:

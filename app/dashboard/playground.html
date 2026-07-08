@@ -6,140 +6,153 @@
 <title>Playground — AMD Hybrid Router</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#c9d1d9;padding:24px;max-width:960px;margin:0 auto;min-height:100vh}
-h1{font-size:1.5rem;color:#f0f6fc;margin-bottom:4px}
-.sub{color:#8b949e;font-size:.85rem;margin-bottom:24px}
-.panel{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px;margin-bottom:16px}
-label{display:block;font-size:.8rem;color:#8b949e;margin-bottom:6px}
-textarea,input[type=text]{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:10px 12px;font-size:.9rem;font-family:inherit;transition:border-color .15s}
-textarea:focus-visible,input:focus-visible{outline:2px solid #58a6ff;outline-offset:-1px;border-color:#58a6ff}
-textarea{min-height:88px;resize:vertical}
-.row{display:flex;gap:12px;flex-wrap:wrap}
-.row > div{flex:1;min-width:140px}
-.slider-row{display:flex;align-items:center;gap:10px}
-.slider-row input[type=range]{flex:1;accent-color:#58a6ff;height:6px;cursor:pointer}
-.slider-row .val{min-width:36px;text-align:right;color:#58a6ff;font-weight:600;font-variant-numeric:tabular-nums}
-button{background:#238636;color:#fff;border:none;border-radius:6px;padding:10px 28px;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .15s}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#c9d1d9;padding:24px;max-width:860px;margin:0 auto;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px}
+header h1{font-size:1.4rem;color:#f0f6fc;font-weight:700}
+header .sub{color:#8b949e;font-size:.82rem;margin-top:2px}
+.nav{display:flex;gap:8px}
+.nav a{color:#8b949e;text-decoration:none;font-size:.82rem;padding:4px 12px;border-radius:6px;border:1px solid #30363d;transition:all .15s}
+.nav a:hover{color:#f0f6fc;border-color:#58a6ff;background:#161b22}
+.panel{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;margin-bottom:16px}
+textarea{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:12px;font-size:.9rem;font-family:inherit;min-height:90px;resize:vertical;transition:border-color .15s}
+textarea:focus-visible{outline:2px solid #58a6ff;outline-offset:-1px;border-color:#58a6ff}
+.prompt-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.prompt-row > div{flex:1;min-width:160px}
+label{display:block;font-size:.76rem;color:#8b949e;margin-bottom:5px;letter-spacing:.02em}
+.slider-row{display:flex;align-items:center;gap:8px}
+.slider-row input[type=range]{flex:1;accent-color:#58a6ff;height:5px;cursor:pointer}
+.slider-row .val{min-width:34px;text-align:right;color:#58a6ff;font-weight:600;font-size:.85rem;font-variant-numeric:tabular-nums}
+input[type=text]{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:10px 12px;font-size:.9rem;font-family:inherit}
+input:focus-visible{outline:2px solid #58a6ff;outline-offset:-1px;border-color:#58a6ff}
+.btn-row{display:flex;gap:8px;align-items:center;margin-top:14px}
+button{background:#238636;color:#fff;border:none;border-radius:6px;padding:9px 24px;font-size:.85rem;font-weight:600;cursor:pointer;transition:background .15s}
 button:hover{background:#2ea043}
 button:focus-visible{outline:2px solid #58a6ff;outline-offset:2px}
 button:disabled{opacity:.4;cursor:not-allowed}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid #fff4;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #fff4;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
+kbd{background:#21262d;padding:1px 5px;border-radius:3px;font-size:.7rem;border:1px solid #30363d;font-family:inherit}
+.shortcut{color:#8b949e;font-size:.75rem;margin-left:auto}
 #result{display:none}
-.model-badge{display:inline-block;padding:3px 12px;border-radius:12px;font-size:.75rem;font-weight:600;letter-spacing:.03em}
-.model-badge.simple{background:#1a7f3733;color:#3fb950;border:1px solid #3fb95055}
-.model-badge.medium{background:#9e6a0333;color:#d29922;border:1px solid #d2992255}
-.model-badge.complex{background:#da363333;color:#f85149;border:1px solid #f8514955}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
-.stat-card{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:10px}
-.stat-card .s-label{font-size:.7rem;text-transform:uppercase;color:#8b949e;letter-spacing:.04em}
-.stat-card .s-val{font-size:1rem;font-weight:600;color:#f0f6fc;margin-top:2px;word-break:break-all}
-.stat-card .s-val.green{color:#3fb950}
-.output-box{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin-top:12px;font-size:.85rem;line-height:1.5;white-space:pre-wrap;max-height:360px;overflow-y:auto}
-.output-box .label{color:#8b949e;font-size:.75rem;text-transform:uppercase;margin-bottom:6px;letter-spacing:.04em}
-.cost-compare{margin-top:12px;font-size:.82rem}
-.cost-compare summary{cursor:pointer;color:#58a6ff;font-weight:600;padding:4px 0}
-.cost-compare summary:focus-visible{outline:2px solid #58a6ff;outline-offset:2px;border-radius:4px}
-.cost-compare table{width:100%;border-collapse:collapse;margin-top:8px}
-.cost-compare th{text-align:left;color:#8b949e;padding:6px 4px;border-bottom:1px solid #30363d;font-size:.75rem;letter-spacing:.04em}
-.cost-compare td{padding:5px 4px;border-bottom:1px solid #21262d;font-variant-numeric:tabular-nums}
-.cost-compare tr.chosen{background:#1a7f3711}
-.cost-compare tr.chosen td{color:#3fb950;font-weight:600}
-.error-msg{color:#f85149;background:#da363311;border:1px solid #f8514933;border-radius:6px;padding:10px;margin-top:12px}
-kbd{background:#21262d;padding:2px 6px;border-radius:3px;font-size:.72rem;border:1px solid #30363d;font-family:inherit}
-@media(max-width:600px){body{padding:12px}.panel{padding:14px}.stat-grid{grid-template-columns:1fr 1fr}}
+.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.04em;margin-bottom:10px;text-transform:uppercase}
+.badge.simple{background:#1a7f3722;color:#3fb950;border:1px solid #3fb95055}
+.badge.medium{background:#9e6a0322;color:#d29922;border:1px solid #d2992255}
+.badge.complex{background:#da363322;color:#f85149;border:1px solid #f8514955}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:10px 0}
+.rcard{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:10px}
+.rcard .rl{font-size:.65rem;text-transform:uppercase;color:#8b949e;letter-spacing:.05em}
+.rcard .rv{font-size:1rem;font-weight:700;color:#f0f6fc;margin-top:3px;font-variant-numeric:tabular-nums;word-break:break-all}
+.rcard .rv.green{color:#3fb950}
+.obox{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin-top:10px;font-size:.84rem;line-height:1.5;white-space:pre-wrap;max-height:350px;overflow-y:auto}
+.obox .ol{color:#8b949e;font-size:.68rem;text-transform:uppercase;margin-bottom:5px;letter-spacing:.05em}
+details.cost{margin-top:10px;font-size:.8rem}
+details.cost summary{cursor:pointer;color:#58a6ff;font-weight:600;padding:4px 0;font-size:.8rem}
+details.cost summary:focus-visible{outline:2px solid #58a6ff;outline-offset:2px;border-radius:4px}
+details.cost table{width:100%;border-collapse:collapse;margin-top:6px}
+details.cost th{text-align:left;color:#8b949e;padding:5px 4px;border-bottom:1px solid #30363d;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
+details.cost td{padding:4px;border-bottom:1px solid #21262d;font-variant-numeric:tabular-nums;font-size:.78rem}
+details.cost tr.chosen{background:#1a7f3711}
+details.cost tr.chosen td{color:#3fb950;font-weight:600}
+.alert{color:#f85149;background:#da363311;border:1px solid #f8514933;border-radius:6px;padding:10px;margin-top:10px;font-size:.84rem}
+.rules{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:14px;margin-top:16px;font-size:.78rem;color:#8b949e}
+@media(max-width:600px){body{padding:12px}.panel{padding:14px}}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🧪 Playground</h1>
-  <div class="sub">AMD Hybrid Token-Efficient Router — Track 1</div>
+  <div>
+    <h1>🧪 Playground</h1>
+    <div class="sub">AMD Hybrid Token-Efficient Router — Track 1</div>
+  </div>
+  <div class="nav">
+    <a href="/">Dashboard</a>
+    <a href="/playground">Playground</a>
+    <a href="https://github.com/ismaeldouglasdev/amd-hybrid-router" target="_blank">GitHub</a>
+  </div>
 </header>
 
-<main>
-<div class="panel" role="form" aria-label="Routing playground">
-  <label for="prompt">Prompt <kbd>Ctrl+Enter</kbd> to route</label>
-  <textarea id="prompt" placeholder="Type a prompt to route... e.g. write a python function to reverse a string" aria-describedby="prompt-desc">write a python function to reverse a string</textarea>
-  <div id="prompt-desc" hidden>The prompt to route through the model selector</div>
+<div class="panel">
+  <label for="prompt">Prompt <kbd>Ctrl+Enter</kbd></label>
+  <textarea id="prompt" placeholder="Try: write a python function to reverse a string">write a python function to reverse a string</textarea>
 
-  <div class="row">
+  <div class="prompt-row">
     <div>
-      <label for="system">System prompt <kbd>opt</kbd></label>
-      <input type="text" id="system" placeholder="You are a helpful assistant" value="You are a concise coding assistant.">
+      <label for="system">System <kbd>opt</kbd></label>
+      <input type="text" id="system" placeholder="You are a helpful assistant" value="Be concise.">
     </div>
   </div>
 
-  <div class="row">
+  <div class="prompt-row">
     <div>
-      <label for="maxTokens">Max tokens: <span id="maxTokensVal">512</span></label>
+      <label for="maxTokens">Max tokens</label>
       <div class="slider-row">
-        <input type="range" id="maxTokens" min="16" max="4096" value="512" aria-label="Max tokens">
+        <input type="range" id="maxTokens" min="16" max="4096" value="512">
+        <span class="val" id="maxTokensVal">512</span>
       </div>
     </div>
     <div>
-      <label for="temp">Temperature: <span id="tempVal">0.7</span></label>
+      <label for="temp">Temperature</label>
       <div class="slider-row">
-        <input type="range" id="temp" min="0" max="200" value="70" aria-label="Temperature">
+        <input type="range" id="temp" min="0" max="100" value="50">
+        <span class="val" id="tempVal">0.5</span>
       </div>
     </div>
   </div>
 
-  <button id="submitBtn" aria-label="Route prompt">🚀 Route</button>
+  <div class="btn-row">
+    <button id="submitBtn">🚀 Route</button>
+    <span class="shortcut">Ctrl+Enter to send</span>
+  </div>
 </div>
 
-<div id="result" class="panel" role="region" aria-live="polite" aria-label="Routing result">
-  <div id="modelBadge" class="model-badge simple" role="status">—</div>
-  <div class="stat-grid" aria-label="Response statistics">
-    <div class="stat-card"><div class="s-label" id="resModelLabel">Model</div><div class="s-val" id="resModel" aria-labelledby="resModelLabel">—</div></div>
-    <div class="stat-card"><div class="s-label" id="resCostLabel">Cost</div><div class="s-val green" id="resCost" aria-labelledby="resCostLabel">$0</div></div>
-    <div class="stat-card"><div class="s-label" id="resLatLabel">Latency</div><div class="s-val" id="resLatency" aria-labelledby="resLatLabel">—</div></div>
-    <div class="stat-card"><div class="s-label" id="resTokLabel">Tokens</div><div class="s-val" id="resTokens" aria-labelledby="resTokLabel">—</div></div>
+<div id="result" class="panel">
+  <div class="badge simple" id="badge">—</div>
+  <div class="rgrid" id="rgrid">
+    <div class="rcard"><div class="rl">Model</div><div class="rv" id="resModel">—</div></div>
+    <div class="rcard"><div class="rl">Cost</div><div class="rv green" id="resCost">—</div></div>
+    <div class="rcard"><div class="rl">Latency</div><div class="rv" id="resLat">—</div></div>
+    <div class="rcard"><div class="rl">Tokens</div><div class="rv" id="resTok">—</div></div>
   </div>
-
-  <div class="output-box"><div class="label">Output</div><div id="resOutput">—</div></div>
-
-  <details class="cost-compare" id="costCompare">
+  <div class="obox"><div class="ol">Output</div><div id="resOut">—</div></div>
+  <details class="cost" id="costWrap">
     <summary>What if it used a different model?</summary>
-    <p style="color:#8b949e;font-size:.75rem;margin:4px 0">Extra cost vs cheapest model (glm-5p1)</p>
-    <table aria-label="Cost comparison across all models"><thead><tr><th>Model</th><th style="text-align:right">Cost</th><th style="text-align:right">vs cheapest</th></tr></thead><tbody id="costTableBody"></tbody></table>
+    <p style="color:#8b949e;font-size:.72rem;margin:4px 0">Extra cost vs cheapest model (glm-5p1)</p>
+    <table><thead><tr><th>Model</th><th style="text-align:right">Cost</th><th style="text-align:right">Extra</th></tr></thead><tbody id="costBody"></tbody></table>
   </details>
-
-  <div id="errorBox" class="error-msg" role="alert" style="display:none"></div>
+  <div class="alert" id="alertBox" style="display:none"></div>
 </div>
 
-<div class="panel" style="border-color:#21262d;background:#0d1117">
-  <div style="color:#8b949e;font-size:.85rem">
-    <b>Routing logic:</b> <kbd>simple</kbd> → glm-5p1 ($0.30/M) &nbsp; <kbd>medium</kbd> → gpt-oss-120b ($0.50/M) &nbsp; <kbd>complex</kbd> → deepseek-v4-pro ($1.20/M)
-  </div>
+<div class="rules">
+  <b>Routing logic:</b>
+  <kbd>simple</kbd> → glm-5p1 ($0.30/M) &nbsp;
+  <kbd>medium</kbd> → gpt-oss-120b ($0.50/M) &nbsp;
+  <kbd>complex</kbd> → deepseek-v4-pro ($1.20/M)
 </div>
 
 <script>
 const API = window.location.origin;
 let modelCosts = {};
 
+function n(v, d) { return v !== undefined && v !== null && !isNaN(v) ? v : d; }
+
 async function loadModels() {
   try {
     const r = await fetch(API + '/v1/models');
-    const data = await r.json();
-    data.forEach(m => { modelCosts[m.full_id] = { costIn: m.cost_input_per_1k, costOut: m.cost_output_per_1k }; });
+    if (!r.ok) return;
+    (await r.json()).forEach(m => { modelCosts[m.full_id] = { costIn: m.cost_input_per_1k, costOut: m.cost_output_per_1k }; });
   } catch(e) {}
 }
 
-document.getElementById('maxTokens').addEventListener('input', e => {
-  document.getElementById('maxTokensVal').textContent = e.target.value;
-});
-document.getElementById('temp').addEventListener('input', e => {
-  document.getElementById('tempVal').textContent = (e.target.value / 100).toFixed(1);
-});
+document.getElementById('maxTokens').oninput = e => document.getElementById('maxTokensVal').textContent = e.target.value;
+document.getElementById('temp').oninput = e => document.getElementById('tempVal').textContent = (e.target.value / 100).toFixed(1);
 
 async function route() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Routing...';
-
   document.getElementById('result').style.display = 'none';
-  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('alertBox').style.display = 'none';
 
   const prompt = document.getElementById('prompt').value.trim();
   if (!prompt) { alert('Enter a prompt'); btn.disabled = false; btn.innerHTML = '🚀 Route'; return; }
@@ -156,88 +169,61 @@ async function route() {
       }),
     });
     const data = await resp.json();
-
-    if (!resp.ok || data.error) {
-      showError(data.error || `HTTP ${resp.status}`);
-      return;
-    }
+    if (!resp.ok || data.error) { showError(data.error || 'HTTP ' + resp.status); return; }
 
     const r = data.result;
-    const complexity = data.complexity || 'simple';
+    const comp = data.complexity || 'simple';
+    const badge = document.getElementById('badge');
+    badge.className = 'badge ' + comp;
+    badge.textContent = comp.toUpperCase();
 
-    // Badge
-    const badge = document.getElementById('modelBadge');
-    badge.className = 'model-badge ' + complexity;
-    badge.textContent = complexity.toUpperCase();
+    document.getElementById('resModel').textContent = r.model ? r.model.split('/').pop() : '—';
+    document.getElementById('resCost').textContent = '$' + n(r.cost_usd, 0).toFixed(10);
+    document.getElementById('resLat').textContent = n(r.latency_ms, 0).toFixed(0) + 'ms';
+    document.getElementById('resTok').textContent = n(r.tokens_input, 0) + ' + ' + n(r.tokens_output, 0);
+    document.getElementById('resOut').textContent = r.output || '(empty response)';
 
-    document.getElementById('resModel').textContent = r.model.split('/').pop();
-    document.getElementById('resCost').textContent = '$' + Number(r.cost_usd).toFixed(10);
-    document.getElementById('resLatency').textContent = r.latency_ms + 'ms';
-    document.getElementById('resTokens').textContent = r.tokens_input + ' + ' + r.tokens_output;
-    document.getElementById('resOutput').textContent = r.output || '(empty response)';
-
-    // Cost comparison table
-    buildCostCompare(r.model, r.tokens_input, r.tokens_output);
-
+    buildCostCompare(r.model, n(r.tokens_input, 0), n(r.tokens_output, 0));
     document.getElementById('result').style.display = 'block';
-
-  } catch(e) {
-    showError(e.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '🚀 Route';
-  }
+  } catch(e) { showError(e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '🚀 Route'; }
 }
 
-function buildCostCompare(chosenModel, tokIn, tokOut) {
-  const el = document.getElementById('costCompare');
+function buildCostCompare(chosen, tokIn, tokOut) {
   const keys = Object.keys(modelCosts);
-  if (!keys.length) { return; }
+  const body = document.getElementById('costBody');
+  body.innerHTML = '';
+  if (!keys.length) return;
 
-  const cheapestKey = keys.find(k => k.includes('glm-5p1')) || keys[0];
-  const cheapestCost = modelCosts[cheapestKey];
-  const cheapestTotal = cheapestCost ? ((tokIn/1_000_000)*cheapestCost.costIn + (tokOut/1_000_000)*cheapestCost.costOut) : 0;
+  const cheapKey = keys.find(k => k.includes('glm-5p1')) || keys[0];
+  const cheapM = modelCosts[cheapKey];
+  const cheapTotal = cheapM ? (tokIn/1e6)*cheapM.costIn + (tokOut/1e6)*cheapM.costOut : 0;
 
-  const tbody = document.getElementById('costTableBody');
-  tbody.innerHTML = '';
-
-  const sorted = [...keys].sort((a, b) => {
+  keys.sort((a, b) => {
     const ca = modelCosts[a], cb = modelCosts[b];
     if (!ca || !cb) return 0;
-    return ((tokIn/1_000_000)*ca.costIn + (tokOut/1_000_000)*ca.costOut) -
-           ((tokIn/1_000_000)*cb.costIn + (tokOut/1_000_000)*cb.costOut);
-  });
-
-  sorted.forEach(mid => {
+    return ((tokIn/1e6)*ca.costIn + (tokOut/1e6)*ca.costOut) - ((tokIn/1e6)*cb.costIn + (tokOut/1e6)*cb.costOut);
+  }).forEach(mid => {
     const c = modelCosts[mid];
     if (!c) return;
-    const total = (tokIn/1_000_000)*c.costIn + (tokOut/1_000_000)*c.costOut;
-    const extra = total - cheapestTotal;
-    const isChosen = mid === chosenModel;
+    const total = (tokIn/1e6)*c.costIn + (tokOut/1e6)*c.costOut;
+    const extra = total - cheapTotal;
     const tr = document.createElement('tr');
-    if (isChosen) tr.className = 'chosen';
-    tr.innerHTML = `
-      <td>${mid.split('/').pop()} ${isChosen ? '← chosen' : ''}</td>
-      <td style="text-align:right">$${total.toFixed(10)}</td>
-      <td style="text-align:right;color:${extra > 0.000001 ? '#d29922' : '#8b949e'}">${extra > 0.000001 ? '+' + extra.toFixed(8) : '—'}</td>
-    `;
-    tbody.appendChild(tr);
+    if (mid === chosen) tr.className = 'chosen';
+    tr.innerHTML = `<td>${mid.split('/').pop()} ${mid === chosen ? '←' : ''}</td><td style="text-align:right">$${total.toFixed(10)}</td><td style="text-align:right;color:${extra > 1e-9 ? '#d29922' : '#8b949e'}">${extra > 1e-9 ? '+' + extra.toFixed(8) : '—'}</td>`;
+    body.appendChild(tr);
   });
 }
 
-
 function showError(msg) {
-  const box = document.getElementById('errorBox');
-  box.textContent = 'Error: ' + msg;
+  const box = document.getElementById('alertBox');
+  box.textContent = msg;
   box.style.display = 'block';
   document.getElementById('result').style.display = 'none';
 }
 
-// Handle Ctrl+Enter
-document.getElementById('prompt').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) route();
-});
-
+document.getElementById('prompt').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) route(); });
+document.getElementById('submitBtn').onclick = route;
 loadModels();
 </script>
 </body>
