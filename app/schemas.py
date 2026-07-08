@@ -23,7 +23,6 @@ class Provider(str, Enum):
 class RouteRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=128_000)
     system_prompt: str | None = None
-    prefer_provider: Provider | None = None  # force a specific provider
     max_tokens: int = Field(default=4096, ge=1, le=128_000)
     temperature: float = Field(default=0.7, ge=0, le=2)
 

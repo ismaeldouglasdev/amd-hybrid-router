@@ -74,7 +74,7 @@ class FireworksProvider(BaseProvider):
             "model": model,
             "messages": messages,
             "max_tokens": max_tokens,
-            "temperature": temperature,
+            "temperature": max(0.0, min(1.0, temperature)),
             "stream": False,
         }
 

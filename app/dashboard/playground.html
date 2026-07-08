@@ -165,7 +165,7 @@ async function route() {
     badge.textContent = complexity.toUpperCase();
 
     document.getElementById('resModel').textContent = r.model.split('/').pop();
-    document.getElementById('resCost').textContent = '$' + r.cost_usd;
+    document.getElementById('resCost').textContent = '$' + Number(r.cost_usd).toFixed(10);
     document.getElementById('resLatency').textContent = r.latency_ms + 'ms';
     document.getElementById('resTokens').textContent = r.tokens_input + ' + ' + r.tokens_output;
     document.getElementById('resOutput').textContent = r.output || '(empty response)';
@@ -187,32 +187,43 @@ function buildCostCompare(chosenModel, tokIn, tokOut) {
   const keys = Object.keys(modelCosts);
   if (!keys.length) { document.getElementById('costCompare').style.display = 'none'; return; }
 
-  const deepseekCost = modelCosts['accounts/fireworks/models/deepseek-v4-pro'];
-  const deepseekTotal = deepseekCost ? ((tokIn/1_000_000)*deepseekCost.costIn + (tokOut/1_000_000)*deepseekCost.costOut) : 0;
+  // Find cheapest (glm-5p1) for baseline
+  const cheapestKey = keys.find(k => k.includes('glm-5p1')) || keys[0];
+  const cheapestCost = modelCosts[cheapestKey];
+  const cheapestTotal = cheapestCost ? ((tokIn/1_000_000)*cheapestCost.costIn + (tokOut/1_000_000)*cheapestCost.costOut) : 0;
 
   const tbody = document.getElementById('costTableBody');
   tbody.innerHTML = '';
   let hasData = false;
 
-  keys.forEach(mid => {
+  // Sort by cost ascending
+  const sorted = [...keys].sort((a, b) => {
+    const ca = modelCosts[a], cb = modelCosts[b];
+    if (!ca || !cb) return 0;
+    return ((tokIn/1_000_000)*ca.costIn + (tokOut/1_000_000)*ca.costOut) -
+           ((tokIn/1_000_000)*cb.costIn + (tokOut/1_000_000)*cb.costOut);
+  });
+
+  sorted.forEach(mid => {
     const c = modelCosts[mid];
     if (!c) return;
     const total = (tokIn/1_000_000)*c.costIn + (tokOut/1_000_000)*c.costOut;
-    const savings = deepseekTotal - total;
+    const extra = total - cheapestTotal;
     const isChosen = mid === chosenModel;
     if (isChosen) hasData = true;
     const tr = document.createElement('tr');
     if (isChosen) tr.className = 'chosen';
     tr.innerHTML = `
       <td>${mid.split('/').pop()} ${isChosen ? '← chosen' : ''}</td>
-      <td style="text-align:right">$${total.toFixed(8)}</td>
-      <td style="text-align:right;color:${savings > 0 ? '#3fb950' : '#8b949e'}">${savings > 0 ? '−$' + savings.toFixed(8) : '—'}</td>
+      <td style="text-align:right">$${total.toFixed(10)}</td>
+      <td style="text-align:right;color:${extra > 0 ? '#d29922' : '#8b949e'}">${extra > 0.000001 ? '+' + extra.toFixed(8) : '—'}</td>
     `;
     tbody.appendChild(tr);
   });
 
   document.getElementById('costCompare').style.display = hasData ? 'block' : 'none';
 }
+
 
 function showError(msg) {
   const box = document.getElementById('errorBox');
