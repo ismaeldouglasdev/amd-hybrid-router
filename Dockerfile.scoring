@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Scoring environment — only Fireworks API, no local models
+COPY pyproject.toml .
+RUN pip install --no-cache-dir "fastapi>=0.115" "uvicorn[standard]>=0.34" "pydantic>=2.10" "httpx>=0.28" "rich>=13.9"
+
+COPY app/ ./app/
+
+ENV FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

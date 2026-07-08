@@ -12,6 +12,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
 from app.metrics import STORE
+from app.providers.fireworks_provider import ALLOWED_MODELS, FireworksProvider, MODEL_COSTS
 from app.router import route
 from app.schemas import BenchResult, MetricsSnapshot, Provider, RouteRequest, RouteResponse
 
@@ -58,7 +59,6 @@ async def api_recent(limit: int = 10) -> list[dict]:
 
 @app.get("/v1/health")
 async def health() -> dict:
-    """Quick health check — pings Ollama and 9Router."""
     statuses = {}
     async with httpx.AsyncClient(timeout=5) as c:
         for name, url in [("ollama", "http://localhost:11434"), ("ninerouter", "http://localhost:20128/")]:
@@ -67,30 +67,15 @@ async def health() -> dict:
                 statuses[name] = {"status": "up" if r.is_success else "degraded", "code": r.status_code}
             except httpx.RequestError:
                 statuses[name] = {"status": "down"}
+    statuses["fireworks"] = {"status": "configured" if bool(FireworksProvider().api_key) else "no_api_key"}
     return {"service": "hybrid-router", "version": "0.1.0", "providers": statuses}
 
 
-@app.post("/v1/bench", response_model=list[BenchResult])
-async def api_bench(prompt: str = "Say hello in 5 words.") -> list[BenchResult]:
-    """Benchmark all providers with a prompt."""
-    results = []
-    for prov in Provider:
-        inst = {Provider.ollama: "app.providers.ollama_provider.OllamaProvider",
-                Provider.ninerouter: "app.providers.ninerouter_provider.NinerouterProvider"}
-        # lazy import
-        import importlib
-        mod_path, cls_name = inst[prov].rsplit(".", 1)
-        mod = importlib.import_module(mod_path)
-        cls = getattr(mod, cls_name)
-        p = cls()
-        res = await p.generate(prompt)
-        results.append(BenchResult(
-            provider=res.provider,
-            model=res.model,
-            prompt=prompt,
-            latency_ms=res.latency_ms,
-            tokens_per_sec=round(res.tokens_output / (res.latency_ms / 1000), 1) if res.latency_ms > 0 and res.tokens_output > 0 else 0,
-            success=res.success,
-            error=res.error,
-        ))
-    return results
+@app.get("/v1/models")
+async def api_models() -> list[dict]:
+    return [
+        {"id": m.split("/")[-1], "full_id": m,
+         "cost_input_per_1k": MODEL_COSTS.get(m.split("/")[-1], (0, 0))[0],
+         "cost_output_per_1k": MODEL_COSTS.get(m.split("/")[-1], (0, 0))[1]}
+        for m in ALLOWED_MODELS
+    ]

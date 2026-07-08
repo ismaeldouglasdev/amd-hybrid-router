@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  router:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - FIREWORKS_API_KEY=${FIREWORKS_API_KEY}
+      - FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000

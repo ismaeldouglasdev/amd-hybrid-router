@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+*.egg-info/
+.gitignore
+README.md
+SUBMISSION_PLAN.md
+start.sh

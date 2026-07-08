@@ -17,6 +17,7 @@ class Complexity(str, Enum):
 class Provider(str, Enum):
     ollama = "ollama"
     ninerouter = "ninerouter"
+    fireworks = "fireworks"
 
 
 class RouteRequest(BaseModel):

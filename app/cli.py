@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
-"""CLI — router run, bench, optimize."""
+"""CLI — router run, bench, models, optimize."""
 
 from __future__ import annotations
 
 import asyncio
-import json
 import time
 
 import typer
 from rich.console import Console
-from rich.live import Live
 from rich.table import Table
 
 from app.metrics import STORE
-from app.router import route
+from app.router import route, _estimate_complexity, _select_fireworks_model
 from app.schemas import RouteRequest
+from app.providers.fireworks_provider import ALLOWED_MODELS, MODEL_COSTS, FireworksProvider
 
-cli = typer.Typer(help="AMD Hybrid Token-Efficient Router")
+cli = typer.Typer(help="AMD Hybrid Token-Efficient Router — Track 1")
 console = Console()
 
 
@@ -26,14 +25,22 @@ def run(
     system: str | None = typer.Option(None, "--system", "-s", help="System prompt"),
     max_tokens: int = typer.Option(4096, "--max-tokens", "-m"),
     temperature: float = typer.Option(0.7, "--temp", "-t"),
+    dry: bool = typer.Option(False, "--dry", help="Only show routing decision, no inference"),
 ) -> None:
-    """Route a single prompt through the hybrid engine."""
+    """Route a single prompt through the Fireworks model selector."""
+    complexity = _estimate_complexity(prompt)
+    model, reason = _select_fireworks_model(complexity)
+    console.print(f"[bold]Complexity:[/] {complexity.value}")
+    console.print(f"[bold]Selected model:[/] {model.split('/')[-1]}")
+    console.print(f"[bold]Reason:[/] {reason}")
+
+    if dry:
+        return
+
     async def _run() -> None:
         req = RouteRequest(prompt=prompt, system_prompt=system, max_tokens=max_tokens, temperature=temperature)
         resp = await route(req)
         r = resp.result
-        console.print(f"[bold]Routed to:[/] {r.provider.value} / {r.model}")
-        console.print(f"[bold]Complexity:[/] {resp.complexity.value}")
         console.print(f"[bold]Latency:[/] {r.latency_ms}ms  |  TPOT: {r.tpot_ms}ms")
         console.print(f"[bold]Tokens:[/] {r.tokens_input} in / {r.tokens_output} out")
         console.print(f"[bold]Cost:[/] ${r.cost_usd:.6f}")
@@ -44,41 +51,30 @@ def run(
 
 
 @cli.command()
-def bench(
-    prompt: str = "Write a short poem about AI routing.",
-    count: int = typer.Option(3, "--count", "-c", help="Runs per provider"),
-) -> None:
-    """Benchmark all providers and compare."""
-    async def _bench() -> None:
-        from app.providers.ollama_provider import OllamaProvider
-        from app.providers.ninerouter_provider import NinerouterProvider
-
-        providers = {"ollama": OllamaProvider(), "9router": NinerouterProvider()}
-        table = Table(title=f"Benchmark: {count} runs each")
-        table.add_column("Provider", style="bold")
-        table.add_column("Model")
-        table.add_column("Success", justify="right")
-        table.add_column("Avg Latency", justify="right")
-        table.add_column("Tokens/s", justify="right")
-
-        for name, prov in providers.items():
-            latencies = []
-            tok_rates = []
-            ok = 0
-            for i in range(count):
-                res = await prov.generate(prompt)
-                if res.success:
-                    ok += 1
-                    latencies.append(res.latency_ms)
-                    tok_rates.append(res.tokens_output / (res.latency_ms / 1000) if res.latency_ms > 0 else 0)
-            avg_lat = sum(latencies) / len(latencies) if latencies else 0
-            avg_tok = sum(tok_rates) / len(tok_rates) if tok_rates else 0
-            s = f"{ok}/{count}"
-            table.add_row(name, prov.default_model, s, f"{avg_lat:.0f}ms", f"{avg_tok:.1f}")
-
-        console.print(table)
-
-    asyncio.run(_bench())
+def models() -> None:
+    """List available Fireworks models with costs."""
+    table = Table(title="Fireworks AI Models — Track 1")
+    table.add_column("Model ID", style="bold")
+    table.add_column("Cost In/M tok")
+    table.add_column("Cost Out/M tok")
+    table.add_column("Best For")
+    best_for = {
+        "llama-v3p1-8b": "simple Q&A, factual",
+        "qwen2p5-coder-7b": "mid complexity, code snippets",
+        "qwen2p5-coder-32b": "complex code, architecture",
+        "deepseek-v3p1": "heavy reasoning",
+        "gemma-3-27b": "gemma bonus, balanced",
+    }
+    for m in ALLOWED_MODELS:
+        short = m.split("/")[-1]
+        ci, co = MODEL_COSTS.get(short, (0, 0))
+        for key, desc in best_for.items():
+            if key in m:
+                table.add_row(short, f"${ci:.2f}", f"${co:.2f}", desc)
+                break
+        else:
+            table.add_row(short, f"${ci:.2f}", f"${co:.2f}", "—")
+    console.print(table)
 
 
 @cli.command()
@@ -89,24 +85,18 @@ def optimize() -> None:
         console.print("[yellow]No data yet. Run some requests first.[/]")
         raise typer.Exit()
 
-    console.print("[bold]Optimization Suggestions[/]\n")
+    console.print("[bold]Current Metrics[/]\n")
     for prov, data in snap["provider_breakdown"].items():
-        console.print(f"{prov}: {data['requests']} reqs, {data['avg_latency_ms']:.0f}ms avg, ${data['avg_cost_usd']:.6f}/req")
+        console.print(f"  {prov}: {data['requests']} reqs, {data['avg_latency_ms']:.0f}ms avg, ${data['avg_cost_usd']:.6f}/req")
 
-    # Heuristic: if local is fast enough (p50 < 2s), prefer local for more tasks
-    local = snap["provider_breakdown"].get("ollama")
-    remote = snap["provider_breakdown"].get("ninerouter")
     suggestions = []
-    if local and remote:
-        if local["avg_latency_ms"] < 2000 and local["avg_latency_ms"] < remote["avg_latency_ms"] * 1.5:
-            suggestions.append("→ Local Ollama is competitive. Consider raising LOCAL_MAX_TOKENS in router.py.")
-        if remote["success_rate"] < 0.8:
-            suggestions.append("→ 9Router success rate low. Check NINEROUTER_URL or model availability.")
-    if not suggestions:
-        suggestions.append("→ Need more data. Run 10+ requests across both providers.")
+    fireworks = snap["provider_breakdown"].get("fireworks", {})
+    if fireworks.get("requests", 0) < 10:
+        suggestions.append("Need 10+ requests for meaningful optimization")
 
-    for s in suggestions:
-        console.print(s)
+    console.print("\n[bold]Cost-Saving Suggestions[/]")
+    for s in suggestions or ["Router online — everything $0 so far"]:
+        console.print(f"  {s}")
 
 
 @cli.command()
