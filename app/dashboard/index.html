@@ -6,54 +6,92 @@
 <title>AMD Hybrid Router Dashboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#c9d1d9;padding:24px}
-h1{font-size:1.5rem;margin-bottom:8px;color:#f0f6fc}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#c9d1d9;padding:24px;min-height:100vh}
+h1{font-size:1.5rem;margin-bottom:4px;color:#f0f6fc}
 .sub{color:#8b949e;font-size:.85rem;margin-bottom:24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;font-size:.78rem;color:#8b949e}
+.status-bar .indicator{display:flex;align-items:center;gap:6px}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-dot.online{background:#3fb950;box-shadow:0 0 6px #3fb95066}
+.status-dot.offline{background:#f85149;box-shadow:0 0 6px #f8514966}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
 .card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
-.card h3{font-size:.75rem;text-transform:uppercase;color:#8b949e;margin-bottom:8px}
-.card .val{font-size:1.8rem;font-weight:600;color:#f0f6fc}
+.card h3{font-size:.7rem;text-transform:uppercase;color:#8b949e;margin-bottom:6px;letter-spacing:.04em}
+.card .val{font-size:1.6rem;font-weight:600;color:#f0f6fc;font-variant-numeric:tabular-nums}
 .card .val.green{color:#3fb950}
 .card .val.yellow{color:#d29922}
 .card .val.red{color:#f85149}
-.providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:24px}
 .prov-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
-.prov-card h3{font-size:.9rem;margin-bottom:12px}
-.prov-card .row{display:flex;justify-content:space-between;padding:4px 0;font-size:.85rem}
+.prov-card h3{font-size:.85rem;margin-bottom:10px}
+.prov-card .row{display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem}
 .prov-card .row .label{color:#8b949e}
 .pulse{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 .pulse.up{background:#3fb950;box-shadow:0 0 6px #3fb95066}
 .pulse.down{background:#f85149;box-shadow:0 0 6px #f8514966}
-#recent{margin-top:24px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;max-height:300px;overflow-y:auto}
-#recent table{width:100%;border-collapse:collapse;font-size:.8rem}
-#recent th{text-align:left;color:#8b949e;padding:8px 4px;border-bottom:1px solid #30363d}
-#recent td{padding:6px 4px;border-bottom:1px solid #21262d}
+#recent{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;max-height:320px;overflow-y:auto}
+#recent table{width:100%;border-collapse:collapse;font-size:.78rem}
+#recent th{text-align:left;color:#8b949e;padding:6px 4px;border-bottom:1px solid #30363d;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;background:#161b22}
+#recent td{padding:5px 4px;border-bottom:1px solid #21262d;font-variant-numeric:tabular-nums}
 #recent tr:last-child td{border-bottom:none}
 .error{color:#f85149}
+.nav-links{display:flex;gap:16px;margin-bottom:16px}
+.nav-links a{color:#58a6ff;text-decoration:none;font-size:.85rem}
+.nav-links a:hover{text-decoration:underline}
+@media(max-width:600px){body{padding:12px}.grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <h1>⚡ AMD Hybrid Router</h1>
 <div class="sub">Track 1 — Token-Efficient Routing Agent</div>
 
-<div class="grid" id="stats">
-  <div class="card"><h3>Requests</h3><div class="val" id="total">0</div></div>
-  <div class="card"><h3>Success Rate</h3><div class="val green" id="success">100%</div></div>
-  <div class="card"><h3>Avg Latency</h3><div class="val" id="latency">0ms</div></div>
-  <div class="card"><h3>Total Tokens</h3><div class="val" id="tokens">0</div></div>
+<div class="nav-links">
+  <a href="/">Dashboard</a>
+  <a href="/playground">Playground</a>
+  <a href="/v1/metrics/prometheus" target="_blank">Prometheus</a>
+  <a href="https://github.com/ismaeldouglasdev/amd-hybrid-router" target="_blank">GitHub</a>
 </div>
 
-<div class="providers" id="providers"></div>
+<div class="status-bar" role="status" aria-live="polite">
+  <span class="indicator"><span class="status-dot online" id="statusDot"></span><span id="statusText">Connected</span></span>
+  <span id="lastUpdated">—</span>
+</div>
 
-<div id="recent"><div style="color:#8b949e;text-align:center;padding:24px">Waiting for requests...</div></div>
+<div class="grid" id="stats" role="group" aria-label="Metrics overview">
+  <div class="card"><h3 id="totalLabel">Requests</h3><div class="val" id="total" aria-labelledby="totalLabel">0</div></div>
+  <div class="card"><h3 id="successLabel">Success Rate</h3><div class="val green" id="success" aria-labelledby="successLabel">100%</div></div>
+  <div class="card"><h3 id="latencyLabel">Avg Latency</h3><div class="val" id="latency" aria-labelledby="latencyLabel">0ms</div></div>
+  <div class="card"><h3 id="tokensLabel">Total Tokens</h3><div class="val" id="tokens" aria-labelledby="tokensLabel">0</div></div>
+</div>
+
+<div class="providers" id="providers" role="group" aria-label="Provider breakdown"></div>
+
+<div id="recent" role="region" aria-label="Recent requests">
+  <div style="color:#8b949e;text-align:center;padding:24px">Waiting for requests...</div>
+</div>
 
 <script>
 const API = window.location.origin;
+let online = true;
+
+function updateStatus(ok) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  if (ok && online) {
+    document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  }
+  if (ok !== undefined) {
+    online = ok;
+    dot.className = 'status-dot ' + (ok ? 'online' : 'offline');
+    text.textContent = ok ? 'Connected' : 'Disconnected';
+  }
+}
 
 async function fetchMetrics() {
   try {
     const r = await fetch(API + '/v1/metrics');
     const d = await r.json();
+    updateStatus(true);
     document.getElementById('total').textContent = d.total_requests;
     const sr = (d.success_rate * 100).toFixed(1);
     const srEl = document.getElementById('success');
@@ -64,21 +102,19 @@ async function fetchMetrics() {
 
     const provDiv = document.getElementById('providers');
     const keys = Object.keys(d.provider_breakdown);
-    if (keys.length) {
-      provDiv.innerHTML = keys.map(k => {
-        const p = d.provider_breakdown[k];
-        const sr2 = (p.success_rate * 100).toFixed(1);
-        return `<div class="prov-card">
-          <h3><span class="pulse ${p.success_rate > 0 ? 'up' : 'down'}"></span>${k}</h3>
-          <div class="row"><span class="label">Requests</span><span>${p.requests}</span></div>
-          <div class="row"><span class="label">Success</span><span>${sr2}%</span></div>
-          <div class="row"><span class="label">Avg Latency</span><span>${p.avg_latency_ms.toFixed(0)}ms</span></div>
-          <div class="row"><span class="label">Avg Cost</span><span>$${p.avg_cost_usd.toFixed(6)}</span></div>
-          <div class="row"><span class="label">Total Tokens</span><span>${p.total_tokens.toLocaleString()}</span></div>
-        </div>`;
-      }).join('');
-    }
-  } catch(e) { console.error(e); }
+    provDiv.innerHTML = keys.length ? keys.map(k => {
+      const p = d.provider_breakdown[k];
+      const sr2 = (p.success_rate * 100).toFixed(1);
+      return `<div class="prov-card">
+        <h3><span class="pulse ${p.success_rate > 0 ? 'up' : 'down'}"></span>${k}</h3>
+        <div class="row"><span class="label">Requests</span><span>${p.requests}</span></div>
+        <div class="row"><span class="label">Success</span><span>${sr2}%</span></div>
+        <div class="row"><span class="label">Avg Latency</span><span>${p.avg_latency_ms.toFixed(0)}ms</span></div>
+        <div class="row"><span class="label">Avg Cost</span><span>$${p.avg_cost_usd.toFixed(6)}</span></div>
+        <div class="row"><span class="label">Total Tokens</span><span>${p.total_tokens.toLocaleString()}</span></div>
+      </div>`;
+    }).join('') : '';
+  } catch(e) { updateStatus(false); console.error(e); }
 }
 
 async function fetchRecent() {
@@ -94,8 +130,7 @@ async function fetchRecent() {
     data.forEach(d => {
       const t = new Date(d.timestamp * 1000).toLocaleTimeString();
       const status = d.success ? '✓' : '✗';
-      const statusCls = d.success ? '' : 'error';
-      html += `<tr><td>${t}</td><td>${d.provider}</td><td class="${statusCls}">${status}</td><td>${d.tokens_input}+${d.tokens_output}</td><td>${d.latency_ms.toFixed(0)}ms</td></tr>`;
+      html += `<tr><td>${t}</td><td>${d.provider}</td><td class="${d.success ? '' : 'error'}">${status}</td><td>${d.tokens_input}+${d.tokens_output}</td><td>${d.latency_ms.toFixed(0)}ms</td></tr>`;
     });
     html += '</tbody></table>';
     div.innerHTML = html;
