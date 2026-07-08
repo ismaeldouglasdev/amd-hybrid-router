@@ -188,7 +188,7 @@ function buildCostCompare(chosenModel, tokIn, tokOut) {
   if (!keys.length) { document.getElementById('costCompare').style.display = 'none'; return; }
 
   const deepseekCost = modelCosts['accounts/fireworks/models/deepseek-v4-pro'];
-  const deepseekTotal = deepseekCost ? ((tokIn/1000)*deepseekCost.costIn + (tokOut/1000)*deepseekCost.costOut) : 0;
+  const deepseekTotal = deepseekCost ? ((tokIn/1_000_000)*deepseekCost.costIn + (tokOut/1_000_000)*deepseekCost.costOut) : 0;
 
   const tbody = document.getElementById('costTableBody');
   tbody.innerHTML = '';
@@ -197,7 +197,7 @@ function buildCostCompare(chosenModel, tokIn, tokOut) {
   keys.forEach(mid => {
     const c = modelCosts[mid];
     if (!c) return;
-    const total = (tokIn/1000)*c.costIn + (tokOut/1000)*c.costOut;
+    const total = (tokIn/1_000_000)*c.costIn + (tokOut/1_000_000)*c.costOut;
     const savings = deepseekTotal - total;
     const isChosen = mid === chosenModel;
     if (isChosen) hasData = true;
@@ -205,8 +205,8 @@ function buildCostCompare(chosenModel, tokIn, tokOut) {
     if (isChosen) tr.className = 'chosen';
     tr.innerHTML = `
       <td>${mid.split('/').pop()} ${isChosen ? '← chosen' : ''}</td>
-      <td style="text-align:right">$${total.toFixed(6)}</td>
-      <td style="text-align:right;color:${savings > 0 ? '#3fb950' : '#8b949e'}">${savings > 0 ? '−$' + savings.toFixed(6) : '—'}</td>
+      <td style="text-align:right">$${total.toFixed(8)}</td>
+      <td style="text-align:right;color:${savings > 0 ? '#3fb950' : '#8b949e'}">${savings > 0 ? '−$' + savings.toFixed(8) : '—'}</td>
     `;
     tbody.appendChild(tr);
   });

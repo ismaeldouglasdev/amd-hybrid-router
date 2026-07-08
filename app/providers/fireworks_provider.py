@@ -123,9 +123,9 @@ class FireworksProvider(BaseProvider):
         tpot = elapsed_ms / max(tok_out, 1)
 
         cost_input, cost_output = _match_cost(model)
-        cost_in = (tok_in / 1000) * cost_input
-        cost_out = (tok_out / 1000) * cost_output
-        cost_usd = round((cost_input + cost_output) / 1000000, 12)
+        cost_in = (tok_in / 1_000_000) * cost_input
+        cost_out = (tok_out / 1_000_000) * cost_output
+        cost_usd = round(cost_in + cost_out, 10)
 
         return ProviderResult(
             provider=self.provider,
